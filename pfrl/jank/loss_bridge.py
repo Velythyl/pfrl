@@ -6,7 +6,7 @@ import torch
 
 class AbstractLossBridge(ABC):
     @abstractmethod
-    def get(self, batch_state, batch_action, batch_reward, batch_next_state) -> torch.Tensor:
+    def get(self, batch_state, batch_action, batch_updated_action, batch_reward, batch_next_state) -> torch.Tensor:
         raise NotImplementedError()
 
 
@@ -19,7 +19,7 @@ class StaticLossBridge(AbstractLossBridge):
         self.loss = loss
         self.loss_got_got = False
 
-    def get(self, batch_state, batch_action, batch_reward, batch_next_state) -> torch.Tensor:
+    def get(self, batch_state, batch_action, batch_updated_action, batch_reward, batch_next_state) -> torch.Tensor:
         if self.loss_got_got is None:
             raise Exception("You must set the loss before getting in, dummy.")
         if self.loss_got_got:
@@ -32,7 +32,7 @@ class StaticLossBridge(AbstractLossBridge):
 
 class LossCalculator(ABC):
     @abstractmethod
-    def __call__(self, batch_state, batch_action, batch_reward, batch_next_state):
+    def __call__(self, batch_state, batch_action, batch_updated_action, batch_reward, batch_next_state):
         raise NotImplementedError()
 
 
@@ -41,10 +41,10 @@ class DynamicLossBridge(AbstractLossBridge):
         super().__init__()
         self.loss_calculator = loss_calculator
 
-    def get(self, batch_state, batch_action, batch_reward, batch_next_state):
-        return self.loss_calculator(batch_state, batch_action, batch_reward, batch_next_state)
+    def get(self, batch_state, batch_action, batch_updated_action, batch_reward, batch_next_state):
+        return self.loss_calculator(batch_state, batch_action, batch_updated_action, batch_reward, batch_next_state)
 
 
 class NoLossBridge(AbstractLossBridge):
-    def get(self, batch_state, batch_action, batch_reward, batch_next_state):
+    def get(self, batch_state, batch_action, batch_updated_action, batch_reward, batch_next_state):
         return 0

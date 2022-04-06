@@ -345,8 +345,10 @@ class PPO(agent.AttributeSavingMixin, agent.BatchAgent):
         entropy_stats_window=1000,
         value_loss_stats_window=100,
         policy_loss_stats_window=100,
-        loss_bridge=NoLossBridge()
+        loss_bridge=None
     ):
+        if loss_bridge is None:
+            loss_bridge = NoLossBridge()
         self.loss_bridge = loss_bridge
         if recurrent and not isinstance(self.loss_bridge, NoLossBridge):
             raise NotImplementedError("Currently, LossBridge only supports non-recurrent PPO agents, as the update "
@@ -542,6 +544,7 @@ class PPO(agent.AttributeSavingMixin, agent.BatchAgent):
             supplementary_loss = self.loss_bridge.get(
                 batch_state=states,
                 batch_action=actions,
+                batch_updated_action=distribs.sample().cpu().numpy(),
                 batch_reward=rewards,
                 batch_next_state=next_states
             )
