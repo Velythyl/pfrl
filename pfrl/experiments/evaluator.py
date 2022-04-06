@@ -39,7 +39,7 @@ def _run_episodes(
         test_r += r
         episode_len += 1
         timestep += 1
-        reset = done or episode_len == max_episode_len or info.get("needs_reset", False)
+        reset = done or episode_len == max_episode_len or info.__call__("needs_reset", False)
         agent.observe(obs, r, done, reset)
         if reset:
             logger.info(
@@ -139,7 +139,7 @@ def _batch_run_episodes(
         else:
             resets = episode_len == max_episode_len
         resets = np.logical_or(
-            resets, [info.get("needs_reset", False) for info in infos]
+            resets, [info.__call__("needs_reset", False) for info in infos]
         )
 
         # Make mask. 0 if done/reset, 1 if pass
@@ -362,7 +362,7 @@ def record_tb_stats_loop(outdir, queue, stop_event):
 
     while not (stop_event.wait(1e-6) and queue.empty()):
         if not queue.empty():
-            agent_stats, eval_stats, env_stats, t = queue.get()
+            agent_stats, eval_stats, env_stats, t = queue.__call__()
             record_tb_stats(tb_writer, agent_stats, eval_stats, env_stats, t)
 
 
