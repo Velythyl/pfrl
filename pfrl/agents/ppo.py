@@ -8,6 +8,7 @@ import torch.nn.functional as F
 
 import pfrl
 from pfrl import agent
+from pfrl.jank.loss_bridge import NoLossBridge
 from pfrl.utils.batch_states import batch_states
 from pfrl.utils.mode_of_distribution import mode_of_distribution
 from pfrl.utils.recurrent import (
@@ -344,7 +345,13 @@ class PPO(agent.AttributeSavingMixin, agent.BatchAgent):
         entropy_stats_window=1000,
         value_loss_stats_window=100,
         policy_loss_stats_window=100,
+        loss_bridge=NoLossBridge()
     ):
+        self.loss_bridge = loss_bridge
+        if recurrent and not isinstance(self.loss_bridge, NoLossBridge):
+            raise NotImplementedError("Currently, LossBridge only supports non-recurrent PPO agents, as the update "
+                                      "behaviour with recurrence is different.")
+
         self.model = model
         self.optimizer = optimizer
         self.obs_normalizer = obs_normalizer
@@ -524,6 +531,23 @@ class PPO(agent.AttributeSavingMixin, agent.BatchAgent):
                 advs=advs,
                 vs_teacher=vs_teacher,
             )
+
+            # ! JANK !
+            rewards = torch.tensor([b["reward"] for b in batch], device=device)
+            next_states = self.batch_states(
+                [b["next_state"] for b in batch], self.device, self.phi
+            )
+            if self.obs_normalizer:
+                next_states = self.obs_normalizer(next_states, update=False)
+            supplementary_loss = self.loss_bridge.get(
+                batch_state=states,
+                batch_action=actions,
+                batch_reward=rewards,
+                batch_next_state=next_states
+            )
+            loss = loss + supplementary_loss
+            # ! JANK !
+
             loss.backward()
             if self.max_grad_norm is not None:
                 torch.nn.utils.clip_grad_norm_(
