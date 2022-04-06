@@ -541,7 +541,7 @@ class PPO(agent.AttributeSavingMixin, agent.BatchAgent):
             )
             if self.obs_normalizer:
                 next_states = self.obs_normalizer(next_states, update=False)
-            supplementary_loss = self.loss_bridge(
+            supplementary_loss = self.loss_bridge.get_loss(
                 batch_state=states,
                 batch_action=actions,
                 batch_updated_action=distribs.sample().cpu().numpy(),

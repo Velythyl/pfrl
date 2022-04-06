@@ -35,7 +35,7 @@ def test_monitor(n_episodes):
             t += 1
             if episode_idx == 1 and episode_len >= 3:
                 info["needs_reset"] = True  # simulate ContinuingTimeLimit
-            if done or info.__call__("needs_reset", False) or t == steps:
+            if done or info.get("needs_reset", False) or t == steps:
                 if episode_idx + 1 == n_episodes or t == steps:
                     break
                 env.reset()

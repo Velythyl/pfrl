@@ -60,7 +60,7 @@ def train_agent(
             t += 1
             episode_r += r
             episode_len += 1
-            reset = episode_len == max_episode_len or info.__call__("needs_reset", False)
+            reset = episode_len == max_episode_len or info.get("needs_reset", False)
             agent.observe(obs, r, done, reset)
 
             for hook in step_hooks:
