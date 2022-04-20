@@ -546,7 +546,8 @@ class PPO(agent.AttributeSavingMixin, agent.BatchAgent):
                 batch_action=actions,
                 batch_updated_action=distribs.sample().cpu().numpy(),
                 batch_reward=rewards,
-                batch_next_state=next_states
+                batch_next_state=next_states,
+                update_interval=self.update_interval
             )
             loss = loss + supplementary_loss
             # ! JANK !

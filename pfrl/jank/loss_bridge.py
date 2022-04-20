@@ -6,7 +6,7 @@ import torch
 
 class AbstractLossBridge(ABC):
     @abstractmethod
-    def get_loss(self, batch_state, batch_action, batch_updated_action, batch_reward, batch_next_state) -> torch.Tensor:
+    def get_loss(self, batch_state, batch_action, batch_updated_action, batch_reward, batch_next_state, update_interval) -> torch.Tensor:
         raise NotImplementedError()
 
 
@@ -19,7 +19,7 @@ class StaticLossBridge(AbstractLossBridge):
         self.loss = loss
         self.loss_got_got = False
 
-    def get_loss(self, batch_state, batch_action, batch_updated_action, batch_reward, batch_next_state) -> torch.Tensor:
+    def get_loss(self, batch_state, batch_action, batch_updated_action, batch_reward, batch_next_state, update_interval) -> torch.Tensor:
         if self.loss_got_got is None:
             raise Exception("You must set the loss before getting in, dummy.")
         if self.loss_got_got:
@@ -31,5 +31,5 @@ class StaticLossBridge(AbstractLossBridge):
 
 
 class NoLossBridge(AbstractLossBridge):
-    def get_loss(self, batch_state, batch_action, batch_updated_action, batch_reward, batch_next_state):
+    def get_loss(self, batch_state, batch_action, batch_updated_action, batch_reward, batch_next_state, update_interval):
         return 0
