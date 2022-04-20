@@ -7,20 +7,41 @@ import numpy as np
 from pfrl.experiments.evaluator import Evaluator, save_agent
 
 
+class BaseExtraLogger:
+    def __call__(self, timestep, dict):
+        pass
+
+
+class TBExtraLogger(BaseExtraLogger):
+    def __init__(self, tb_logger, base_key):
+        self.tb_logger = tb_logger
+        self.base_key = base_key
+
+    def __call__(self, timestep, dict):
+        for key, item in dict.items():
+            try:
+                if float(item) != item:
+                    continue
+            except:
+                continue
+            self.tb_logger.add_scalar(f"{self.base_key}/{key}", item, timestep)
+
+
 def train_agent_batch(
-    agent,
-    env,
-    steps,
-    outdir,
-    checkpoint_freq=None,
-    log_interval=None,
-    max_episode_len=None,
-    step_offset=0,
-    evaluator=None,
-    successful_score=None,
-    step_hooks=(),
-    return_window_size=100,
-    logger=None,
+        agent,
+        env,
+        steps,
+        outdir,
+        checkpoint_freq=None,
+        log_interval=None,
+        max_episode_len=None,
+        step_offset=0,
+        evaluator=None,
+        successful_score=None,
+        step_hooks=(),
+        return_window_size=100,
+        logger=None,
+        extra_logger=BaseExtraLogger()
 ):
     """Train an agent in a batch environment.
 
@@ -104,9 +125,9 @@ def train_agent_batch(
                     hook(env, agent, t)
 
             if (
-                log_interval is not None
-                and t >= log_interval
-                and t % log_interval < num_envs
+                    log_interval is not None
+                    and t >= log_interval
+                    and t % log_interval < num_envs
             ):
                 logger.info(
                     "outdir:{} step:{} episode:{} last_R: {} average_R:{}".format(  # NOQA
@@ -117,7 +138,16 @@ def train_agent_batch(
                         np.mean(recent_returns) if recent_returns else np.nan,
                     )
                 )
-                logger.info("statistics: {}".format(agent.get_statistics()))
+                extra_logger(t, {
+                    "episode", np.sum(episode_idx),
+                    "last_R", recent_returns[-1] if recent_returns else np.nan,
+                    "average_R", np.mean(recent_returns) if recent_returns else np.nan
+                })
+                agent_stats = agent.get_statistics()
+                agent_stats_dict = {key: val for key, val in agent_stats}
+                logger.info("statistics: {}".format(agent_stats))
+                extra_logger(t, agent_stats_dict)
+
             if evaluator:
                 eval_score = evaluator.evaluate_if_necessary(
                     t=t, episodes=np.sum(episode_idx)
@@ -127,8 +157,8 @@ def train_agent_batch(
                     eval_stats["eval_score"] = eval_score
                     eval_stats_history.append(eval_stats)
                     if (
-                        successful_score is not None
-                        and evaluator.max_score >= successful_score
+                            successful_score is not None
+                            and evaluator.max_score >= successful_score
                     ):
                         break
 
@@ -155,26 +185,26 @@ def train_agent_batch(
 
 
 def train_agent_batch_with_evaluation(
-    agent,
-    env,
-    steps,
-    eval_n_steps,
-    eval_n_episodes,
-    eval_interval,
-    outdir,
-    checkpoint_freq=None,
-    max_episode_len=None,
-    step_offset=0,
-    eval_max_episode_len=None,
-    return_window_size=100,
-    eval_env=None,
-    log_interval=None,
-    successful_score=None,
-    step_hooks=(),
-    evaluation_hooks=(),
-    save_best_so_far_agent=True,
-    use_tensorboard=False,
-    logger=None,
+        agent,
+        env,
+        steps,
+        eval_n_steps,
+        eval_n_episodes,
+        eval_interval,
+        outdir,
+        checkpoint_freq=None,
+        max_episode_len=None,
+        step_offset=0,
+        eval_max_episode_len=None,
+        return_window_size=100,
+        eval_env=None,
+        log_interval=None,
+        successful_score=None,
+        step_hooks=(),
+        evaluation_hooks=(),
+        save_best_so_far_agent=True,
+        use_tensorboard=False,
+        logger=None,
 ):
     """Train an agent while regularly evaluating it.
 
