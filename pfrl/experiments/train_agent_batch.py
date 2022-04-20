@@ -205,6 +205,7 @@ def train_agent_batch_with_evaluation(
         save_best_so_far_agent=True,
         use_tensorboard=False,
         logger=None,
+        extra_logger=BaseExtraLogger()
 ):
     """Train an agent while regularly evaluating it.
 
@@ -288,6 +289,7 @@ def train_agent_batch_with_evaluation(
         log_interval=log_interval,
         step_hooks=step_hooks,
         logger=logger,
+        extra_logger=extra_logger
     )
 
     return agent, eval_stats_history
