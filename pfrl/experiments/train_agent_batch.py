@@ -139,9 +139,9 @@ def train_agent_batch(
                     )
                 )
                 extra_logger(t, {
-                    "episode", np.sum(episode_idx),
-                    "last_R", recent_returns[-1] if recent_returns else np.nan,
-                    "average_R", np.mean(recent_returns) if recent_returns else np.nan
+                    "episode": np.sum(episode_idx),
+                    "last_R": recent_returns[-1] if recent_returns else np.nan,
+                    "average_R": np.mean(recent_returns) if recent_returns else np.nan
                 })
                 agent_stats = agent.get_statistics()
                 agent_stats_dict = {key: val for key, val in agent_stats}
